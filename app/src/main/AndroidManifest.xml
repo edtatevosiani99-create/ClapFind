@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-feature android:name="android.hardware.camera.flash" android:required="false"/>
-    <application android:theme="@android:style/Theme.Material.Light.NoActionBar" android:label="ClapFind" android:allowBackup="false">
+    <application android:theme="@android:style/Theme.Material.Light.NoActionBar" android:label="ClapFind" android:icon="@drawable/ic_clapfind" android:roundIcon="@drawable/ic_clapfind" android:allowBackup="false">
         <activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity>
         <service android:name=".ListeningService" android:exported="false" android:foregroundServiceType="microphone|camera"/>
     </application>
