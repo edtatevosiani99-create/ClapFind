@@ -24,7 +24,7 @@ public class ListeningService extends Service {
     long lastClapAt = 0;
     long lastClapDetectedAt = 0;
     boolean whistleTriggered = false;
-    double noiseRms = 0.004;
+    double noiseRms = 0.008;
 
     final Runnable finishClapBurst = () -> {
         int count;
@@ -34,7 +34,7 @@ public class ListeningService extends Service {
             lastClapAt = 0;
         }
         updateNotification("Listening for claps or a whistle");
-        if (count == 3) ring();
+        if (count >= 3) ring();
     };
 
     public void onCreate() {
@@ -147,15 +147,18 @@ public class ListeningService extends Service {
                 double zcr = (double) crossings / n;
                 long now = System.currentTimeMillis();
 
-                // Detect a short, loud transient; no dependence on the previous frame's volume.
-                boolean clap = peak >= 2800 && rms >= Math.max(0.009, noiseRms * 1.9)
-                    && now - lastClapDetectedAt >= 230;
+                // Recognize sharp, short impulses rather than every loud sound.
+                double crest = peak / (rms * 32768.0 + 1.0);
+                boolean clap = peak >= 4500
+                    && rms >= Math.max(0.018, noiseRms * 2.6)
+                    && crest >= 4.5
+                    && now - lastClapDetectedAt >= 350;
                 if (clap) {
                     lastClapDetectedAt = now;
                     recordClap();
-                } else if (rms < noiseRms * 3.0) {
-                    noiseRms = noiseRms * 0.97 + rms * 0.03;
-                    noiseRms = Math.max(0.002, Math.min(noiseRms, 0.04));
+                } else {
+                    noiseRms = noiseRms * 0.985 + rms * 0.015;
+                    noiseRms = Math.max(0.003, Math.min(noiseRms, 0.12));
                 }
 
                 // Whistles usually have sustained energy and a relatively narrow frequency band.
@@ -180,7 +183,7 @@ public class ListeningService extends Service {
     synchronized void recordClap() {
         long now = System.currentTimeMillis();
         if (lastClapAt == 0 || now - lastClapAt > 1600) clapCount = 0;
-        clapCount++;
+        clapCount = Math.min(3, clapCount + 1);
         lastClapAt = now;
         int shown = clapCount;
         updateNotification("Detected clap " + shown + "/3");
